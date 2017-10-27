@@ -37,11 +37,14 @@ HEADER = {
 MAX_PAGESIZE = 50
 MAX_RELOAD_TIMES = 5
 RESPONSE_TIMEOUT = 10
-if OUT_DIR[len(OUT_DIR) - 1] != '/':
-    OUT_DIR += '/'
-ERROR_LOG = OUT_DIR + 'error.log'
-OUTPUT_CSV_FILE = OUT_DIR + OUTPUT_FILENAME.replace('/', '') + '_' + \
-                  START_DATE.replace('-', '') + '-' + END_DATE.replace('-', '') + '.csv'
+
+
+def standardize_dir(dir_str):
+    assert (os.path.exists(dir_str)), 'Such directory \"' + str(dir_str) + '\" does not exists!'
+    if dir_str[len(dir_str) - 1] != '/':
+        return dir_str + '/'
+    else:
+        return dir_str
 
 
 # 参数：页id（没页条目个数由MAX_PAGESIZE控制），是否返回总条目数（bool)
@@ -70,7 +73,7 @@ def get_response(page_num, return_total_count=False):
         if reloading > MAX_RELOAD_TIMES:
             return []
         elif reloading > 1:
-            _sleeping(random.randint(5, 10))
+            __sleeping(random.randint(5, 10))
             print('... reloading: the ' + str(reloading) + ' round ...')
         try:
             r = requests.post(URL, query, HEADER, timeout=RESPONSE_TIMEOUT)
@@ -89,7 +92,7 @@ def get_response(page_num, return_total_count=False):
     else:
         for each in my_query['announcements']:
             file_link = 'http://www.cninfo.com.cn/' + str(each['adjunctUrl'])
-            file_name = _filter_illegal_filename(
+            file_name = __filter_illegal_filename(
                 str(each['secCode']) + str(each['secName']) + str(each['announcementTitle']) +
                 file_link[-file_link[::-1].find('.') - 1:]  # 最后一项是获取文件类型后缀名
             )
@@ -97,20 +100,20 @@ def get_response(page_num, return_total_count=False):
         return result_list
 
 
-def _log_error(err_msg):
+def __log_error(err_msg):
     err_msg = str(err_msg)
     print(str(err_msg))
-    with open(ERROR_LOG, 'a', encoding='gb18030') as err_writer:
+    with open(error_log, 'a', encoding='gb18030') as err_writer:
         err_writer.write(err_msg + '\n')
 
 
-def _sleeping(sec):
+def __sleeping(sec):
     if type(sec) == int:
         print('... sleeping ' + str(sec) + ' second ...')
         time.sleep(sec)
 
 
-def _filter_illegal_filename(filename):
+def __filter_illegal_filename(filename):
     illegal_char = {
         ' ': '',
         '*': '',
@@ -145,20 +148,28 @@ def _filter_illegal_filename(filename):
 
 
 if __name__ == '__main__':
-    assert (os.path.exists(OUT_DIR)), 'Such directory \"' + OUT_DIR + "\" does not exists!"
+    # 初始化重要变量
+    out_dir = standardize_dir(OUT_DIR)
+    error_log = out_dir + 'error.log'
+    output_csv_file = out_dir + OUTPUT_FILENAME.replace('/', '') + '_' + \
+                      START_DATE.replace('-', '') + '-' + END_DATE.replace('-', '') + '.csv'
+
+    # 获取记录数、页数
     item_count = get_response(1, True)
     assert (item_count != []), 'Please restart this script!'
     begin_pg = 1
     end_pg = int(math.ceil(item_count / MAX_PAGESIZE))
     print('Page count: ' + str(end_pg) + '; item count: ' + str(item_count) + '.')
     time.sleep(2)
-    with open(OUTPUT_CSV_FILE, 'w', newline='', encoding='gb18030') as csv_out:
+
+    # 逐页抓取
+    with open(output_csv_file, 'w', newline='', encoding='gb18030') as csv_out:
         writer = csv.writer(csv_out)
         for i in range(begin_pg, end_pg + 1):
             row = get_response(i)
             if not row:
-                _log_error('Failed to fetch page #' + str(i) +
-                           ': exceeding max reloading times (' + str(MAX_RELOAD_TIMES) + ').')
+                __log_error('Failed to fetch page #' + str(i) +
+                            ': exceeding max reloading times (' + str(MAX_RELOAD_TIMES) + ').')
                 continue
             else:
                 writer.writerows(row)
