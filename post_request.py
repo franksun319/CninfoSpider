@@ -15,12 +15,14 @@ import requests
 可改配置，酌情更改
 *****************
 """
-START_DATE = '2004-05-28'  # 首家中小板上市企业的日期
-END_DATE = str(time.strftime('%Y-%m-%d'))  # 默认当前日期，可设置为制定值
-OUT_DIR = 'D:/My Works/上市企业年报/2016中小板年报/'
-OUTPUT_FILENAME = '2016中小板板首次上市信息'
+# 首家中小板企业上市日期：2004-05-28；首家创业板企业上市日期：2009-09-21
+START_DATE = '2011-01-01'
+END_DATE = '2011-12-31'
+# END_DATE = str(time.strftime('%Y-%m-%d'))  # 默认当前日期，可设置为制定值
+OUT_DIR = 'D:/My Works/上市企业年报/中小板/'
+OUTPUT_FILENAME = '创业板IPO信息'
 # 板块类型：shmb（沪市主板）、szmb（深市主板）、szzx（中小板）、szcy（创业板）
-PLATE = 'szzx;'
+PLATE = 'szcy;'
 # 公告类型：category_scgkfx_szsh（首次公开发行及上市）、category_ndbg_szsh（年度报告）、category_bndbg_szsh（半年度报告）
 CATEGORY = 'category_scgkfx_szsh;'
 
@@ -55,7 +57,7 @@ def get_response(page_num, return_total_count=False):
         'plate': PLATE,
         'category': CATEGORY,
         'trade': '',
-        'column': 'szse_sme',
+        'column': '',
         'columnTitle': '历史公告查询',
         'pageNum': page_num,
         'pageSize': MAX_PAGESIZE,
@@ -64,7 +66,7 @@ def get_response(page_num, return_total_count=False):
         'sortType': '',
         'limit': '',
         'showTitle': '',
-        'seDate': START_DATE + '~' + END_DATE,
+        'seDate': START_DATE + ' ~ ' + END_DATE, # Fixed in 2018/08/11: the tild symbol should begin and end with blank character
     }
     result_list = []
     reloading = 0
