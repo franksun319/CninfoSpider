@@ -19,7 +19,7 @@ import requests
 START_DATE = '2011-01-01'
 END_DATE = '2011-12-31'
 # END_DATE = str(time.strftime('%Y-%m-%d'))  # 默认当前日期，可设置为制定值
-OUT_DIR = 'D:/My Works/上市企业年报/中小板/'
+OUT_DIR = 'D:/My Works/上市企业年报/DATA/IPO材料/'
 OUTPUT_FILENAME = '创业板IPO信息'
 # 板块类型：shmb（沪市主板）、szmb（深市主板）、szzx（中小板）、szcy（创业板）
 PLATE = 'szcy;'
@@ -66,7 +66,8 @@ def get_response(page_num, return_total_count=False):
         'sortType': '',
         'limit': '',
         'showTitle': '',
-        'seDate': START_DATE + ' ~ ' + END_DATE, # Fixed in 2018/08/11: the tild symbol should begin and end with blank character
+        'seDate': START_DATE + ' ~ ' + END_DATE,
+        # Fixed in 2018/08/11: the tild symbol should begin and end with blank character
     }
     result_list = []
     reloading = 0
@@ -161,6 +162,11 @@ if __name__ == '__main__':
     assert (item_count != []), 'Please restart this script!'
     begin_pg = 1
     end_pg = int(math.ceil(item_count / MAX_PAGESIZE))
+    if end_pg > 119:
+        __log_error('Page count ' + str(end_pg) +
+                    ' is larger than 119, then CNINFO server will pause at the thread.'
+                    '\nPlease reset your parameters. Quit!')
+        exit(-1)
     print('Page count: ' + str(end_pg) + '; item count: ' + str(item_count) + '.')
     time.sleep(2)
 
